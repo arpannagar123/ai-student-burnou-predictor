@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>BurnoutGuard • Clinical-Grade AI Wellness</title>
+  <link rel="stylesheet" href="/static/style.css"/>
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+  <div id="analysisOverlay" class="analysis-overlay hidden">
+    <div class="scanner-box">
+      <div class="spinner"></div>
+      <h3 id="analysisStatus">Processing Cognitive Metrics...</h3>
+      <div class="progress-container">
+        <div id="analysisBar" class="analysis-bar"></div>
+      </div>
+      <div class="log-stream" id="logStream">> INITIATING_SECURE_ENVIRONMENT</div>
+    </div>
+  </div>
+
+  <nav class="navbar" id="navbar">
+    <div class="nav-content">
+      <div class="nav-brand">
+        <div class="logo-small"><i data-lucide="shield-check" style="width: 18px; height: 18px;"></i></div>
+        <span>BurnoutGuard</span>
+      </div>
+      <div class="nav-links">
+        <a href="#features" class="nav-link">Platform</a>
+        <a href="#about" class="nav-link">Clinical Approach</a>
+        <button class="btn-nav start-btn">Start Assessment</button>
+      </div>
+    </div>
+  </nav>
+
+  <div id="landingEcosystem">
+    <section class="landing">
+      <div class="landing-content">
+        <div class="badge animate-slide-up">Validated AI Screening</div>
+        <h1 class="animate-slide-up delay-1">Protect your mental clarity with <span class="gradient-text">precision.</span></h1>
+        <p class="animate-slide-up delay-2">Understand and mitigate your burnout risk utilizing our constrained, logic-driven machine learning architecture designed for students.</p>
+        <div class="landing-actions animate-slide-up delay-2">
+          <button class="btn-hero start-btn">Begin Confidential Assessment</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="features" class="features-section">
+      <div class="features-grid wrap">
+        <div class="feature-card animate-slide-up">
+          <div class="icon-wrap"><i data-lucide="brain"></i></div>
+          <h3>Cognitive Mapping</h3>
+          <p>Evaluates 10 rigorously tested behavioral metrics to determine your exact placement on the exhaustion spectrum.</p>
+        </div>
+        <div class="feature-card animate-slide-up delay-1">
+          <div class="icon-wrap"><i data-lucide="bar-chart-3"></i></div>
+          <h3>Monotonic Logic</h3>
+          <p>Powered by a constrained Gradient Boosting model that guarantees medically logical, monotonic risk scoring.</p>
+        </div>
+        <div class="feature-card animate-slide-up delay-2">
+          <div class="icon-wrap"><i data-lucide="lock"></i></div>
+          <h3>Absolute Privacy</h3>
+          <p>Your inputs are processed temporarily in a secure session. No permanent diagnostic records are stored.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="about" class="features-section" style="background: #F8FAFC; border-top: 1px solid var(--border-color); text-align: center; padding-top: 80px;">
+      <div class="wrap" style="max-width: 800px;">
+        <div class="badge">Scientific Methodology</div>
+        <h2 style="font-size: 36px; margin-bottom: 24px; color: var(--text-main);">Built on Validated Logic</h2>
+        <p style="color: var(--text-muted); font-size: 18px; line-height: 1.6; margin-bottom: 40px;">
+          Traditional AI models blindly follow data, often leading to algorithmic hallucinations. BurnoutGuard is different. We utilize <strong>Post-Hoc Coefficient Constraints</strong> on carefully curated student datasets. This forces the neural engine to respect strict clinical logic: as your exhaustion symptoms increase, your probability score is mathematically guaranteed to rise. 
+        </p>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="wrap footer-content">
+        <div class="footer-brand">
+          <div class="logo-small"><i data-lucide="shield-check" style="width: 14px; height: 14px;"></i></div>
+          <span>BurnoutGuard</span>
+        </div>
+        <p class="footer-text">Advanced cognitive screening and prevention strategies.</p>
+        <p class="footer-copyright">© 2026 BurnoutGuard Analytics. All rights reserved.</p>
+      </div>
+    </footer>
+  </div>
+
+  <main class="wrap hidden" id="mainApp">
+    <header class="app-header animate-slide-up">
+      <div class="brand">
+        <div class="logo"><i data-lucide="activity"></i></div>
+        <div>
+          <h1>Cognitive Assessment</h1>
+          <p class="sub">Please answer the following 10 metrics honestly for an accurate baseline.</p>
+        </div>
+      </div>
+    </header>
+
+    <section class="layout">
+      <div class="card animate-slide-up delay-1">
+        <div class="cardTop">
+          <h2>Student Profile</h2>
+          <div class="stepLabel" id="stepLabel">Step 1 of 3</div>
+        </div>
+
+        <div class="profile">
+          <div class="row">
+            <div class="pfield">
+              <label>Full Name</label>
+              <input id="studentName" type="text" placeholder="e.g. Arpan Nagar">
+            </div>
+            <div class="pfield">
+              <label>Institution</label>
+              <input id="college" type="text" placeholder="e.g. Bennett University">
+            </div>
+          </div>
+          <div class="row">
+            <div class="pfield">
+              <label>Program / Major</label>
+              <input id="course" type="text" placeholder="e.g. BTech CSE">
+            </div>
+            <div class="pfield">
+              <label>Current Semester</label>
+              <input id="semester" type="number" placeholder="e.g. 4">
+            </div>
+          </div>
+        </div>
+
+        <div class="stepper-modern">
+          <div class="step-dot active" id="stepDot1"></div>
+          <div class="step-line"></div>
+          <div class="step-dot" id="stepDot2"></div>
+          <div class="step-line"></div>
+          <div class="step-dot" id="stepDot3"></div>
+        </div>
+
+        <div id="formFields" class="fields"></div>
+
+        <div class="actions">
+          <button id="backBtn" class="btn ghost" disabled>Previous</button>
+          <button id="nextBtn" class="btn">Continue</button>
+          <button id="predictBtn" class="btn-predict hidden">Generate Report</button>
+        </div>
+      </div>
+
+      <div class="card animate-slide-up delay-2">
+        <div class="resultHeader">
+          <h2>Clinical Insights</h2>
+          <button id="pdfBtn" class="btn mini ghost" disabled>
+            <i data-lucide="download" style="width:14px; height:14px; vertical-align:middle; margin-right:4px;"></i> Export PDF
+          </button>
+        </div>
+        <div id="result" class="result empty">
+           <div class="empty-state">
+              <div class="icon-wrap-large"><i data-lucide="clipboard-list"></i></div>
+              <p>Complete the assessment on the left to generate your personalized AI risk analysis.</p>
+           </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script id="fields-json" type="application/json">{{ fields | tojson }}</script>
+  <script src="/static/app.js"></script>
+</body>
+</html>

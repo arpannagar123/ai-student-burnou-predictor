@@ -1,0 +1,48 @@
+{
+  "best_model": "Logic-Constrained AI (Flawless Monotonicity)",
+  "threshold": 0.5,
+  "roc_auc": 0.6565,
+  "accuracy": 0.6036,
+  "input_columns": [
+    "Feeling overwhelmed with academic workload",
+    "Frequency of rapid heartbeats or palpitations",
+    "Level of conflict between academics and extracurriculars",
+    "Frequency of severe anxiety or tension",
+    "Frequency of sleep problems or insomnia",
+    "Frequency of doubting academic subject choice",
+    "Frequency of feeling persistent sadness or low mood",
+    "Difficulty finding time for relaxation and leisure",
+    "Frequency of personal relationships causing stress",
+    "Difficulty concentrating on academic tasks"
+  ],
+  "categorical_columns": [],
+  "numeric_columns": [
+    "Feeling overwhelmed with academic workload",
+    "Frequency of rapid heartbeats or palpitations",
+    "Level of conflict between academics and extracurriculars",
+    "Frequency of severe anxiety or tension",
+    "Frequency of sleep problems or insomnia",
+    "Frequency of doubting academic subject choice",
+    "Frequency of feeling persistent sadness or low mood",
+    "Difficulty finding time for relaxation and leisure",
+    "Frequency of personal relationships causing stress",
+    "Difficulty concentrating on academic tasks"
+  ],
+  "ui_features": [
+    "Feeling overwhelmed with academic workload",
+    "Frequency of rapid heartbeats or palpitations",
+    "Level of conflict between academics and extracurriculars",
+    "Frequency of severe anxiety or tension",
+    "Frequency of sleep problems or insomnia",
+    "Frequency of doubting academic subject choice",
+    "Frequency of feeling persistent sadness or low mood",
+    "Difficulty finding time for relaxation and leisure",
+    "Frequency of personal relationships causing stress",
+    "Difficulty concentrating on academic tasks"
+  ],
+  "ui_counts": {
+    "predictive": 10,
+    "standard": 0,
+    "total": 10
+  }
+}
