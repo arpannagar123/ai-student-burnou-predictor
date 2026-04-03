@@ -1,169 +1,421 @@
-<!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark scroll-smooth">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>BurnoutGuard • Clinical-Grade AI Wellness</title>
-  <link rel="stylesheet" href="/static/style.css"/>
-  <script src="https://unpkg.com/lucide@latest"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>BurnoutGuard | Superconscious Wellness</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@1,500;1,600&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                    },
+                    colors: {
+                        'super-bg': 'var(--bg)',
+                        'super-card': 'var(--card)',
+                        'super-purple': '#7c3aed',
+                        'super-glow': '#a855f7',
+                        'super-text': 'var(--text)',
+                        'super-border': 'var(--border)',
+                    },
+                    animation: {
+                        'blob': 'blob 10s infinite',
+                    },
+                    keyframes: {
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer base {
+            :root {
+                --bg: #ffffff;
+                --card: #f8fafc;
+                --text: #0f172a;
+                --border: rgba(0,0,0,0.06);
+            }
+            .dark {
+                --bg: #07050e;
+                --card: #110e1a;
+                --text: #ffffff;
+                --border: rgba(255,255,255,0.05);
+            }
+            body { @apply bg-super-bg text-super-text font-sans overflow-x-hidden transition-colors duration-500 selection:bg-super-purple selection:text-white; }
+        }
+        @layer utilities {
+            .glass-nav {
+                @apply bg-white/70 dark:bg-[#1a1724]/60 backdrop-blur-xl border border-super-border shadow-sm dark:shadow-none;
+            }
+            .glass-card {
+                @apply bg-super-card backdrop-blur-2xl border border-super-border rounded-[2rem] shadow-xl shadow-black/5 dark:shadow-none;
+            }
+            /* 3D Reveal Engine */
+            .reveal-3d {
+                opacity: 0;
+                transform: rotateX(15deg) translateY(60px) scale(0.92);
+                transition: all 1.2s cubic-bezier(0.23, 1, 0.32, 1);
+                filter: blur(10px);
+            }
+            .reveal-3d.active {
+                opacity: 1;
+                transform: rotateX(0deg) translateY(0px) scale(1);
+                filter: blur(0px);
+            }
+
+            .stagger-1 { transition-delay: 100ms; }
+            .stagger-2 { transition-delay: 250ms; }
+            .stagger-3 { transition-delay: 400ms; }
+            
+            /* 3D Flip Architecture */
+            .credits-container {
+                perspective: 2000px;
+            }
+            .window-inner {
+                position: relative;
+                width: 100%;
+                height: 100%;
+                transition: transform 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+                transform-style: preserve-3d;
+            }
+            .window-inner.flipped {
+                transform: rotateY(180deg);
+            }
+            .window-front, .window-back {
+                width: 100%;
+                backface-visibility: hidden;
+                border-radius: 1rem;
+            }
+            .window-back {
+                position: absolute;
+                top: 0;
+                left: 0;
+                height: 100%;
+                transform: rotateY(180deg);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                text-align: center;
+                background-color: #0c0c14; /* Forced dark base */
+                background: radial-gradient(circle at 50% 50%, #1e1b4b 0%, #030617 100%);
+                background-image: 
+                    radial-gradient(rgba(124, 58, 237, 0.1) 1px, transparent 1px),
+                    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+                background-size: 24px 24px, 120px 120px, 120px 120px;
+                border-radius: 1rem;
+                border: 1px solid rgba(124, 58, 237, 0.2);
+            }
+            .glow-text {
+                text-shadow: 0 0 20px rgba(168, 85, 247, 0.5);
+            }
+            .super-btn {
+                @apply bg-super-purple text-white dark:bg-white dark:text-black font-semibold rounded-full hover:scale-105 transition-transform duration-300;
+            }
+
+            /* macOS Native Interactions */
+            .window-inner {
+                transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.4s ease;
+            }
+            .window-inner.minimized {
+                transform: scale(0.8) translateY(40px);
+                opacity: 0.7;
+            }
+            .window-inner.maximized {
+                transform: scale(1.05);
+                z-index: 70;
+            }
+            @keyframes vanish-out {
+                from { transform: scale(1); filter: blur(0px); opacity: 1; }
+                to { transform: scale(0.95); filter: blur(10px); opacity: 0; }
+            }
+            .vanishing {
+                animation: vanish-out 0.4s forwards;
+                pointer-events: none;
+            }
+            #architectsCard {
+                @apply glass-card p-12 text-center space-y-6 border-super-purple/20 shadow-[0_0_50px_rgba(124,58,237,0.1)];
+            }
+        }
+    </style>
 </head>
-<body>
+<body class="relative min-h-screen">
 
-  <div id="analysisOverlay" class="analysis-overlay hidden">
-    <div class="scanner-box">
-      <div class="spinner"></div>
-      <h3 id="analysisStatus">Processing Cognitive Metrics...</h3>
-      <div class="progress-container">
-        <div id="analysisBar" class="analysis-bar"></div>
-      </div>
-      <div class="log-stream" id="logStream">> INITIATING_SECURE_ENVIRONMENT</div>
+    <div class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-super-purple/30 rounded-full blur-[120px] pointer-events-none z-[-1] animate-blob"></div>
+
+    <nav class="absolute top-6 left-1/2 -translate-x-1/2 z-[60] flex items-center justify-between glass-nav px-2 py-2 rounded-full w-max min-w-[400px] transition-all">
+        <div class="flex items-center gap-1 px-4 cursor-pointer hover:scale-105 transition-transform" id="navLogo">
+            <svg class="w-5 h-5 text-super-purple" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L2 22h20L12 2z"/></svg>
+            <span class="text-xs font-bold tracking-tighter uppercase pl-1">BurnoutGuard</span>
+        </div>
+        <div class="flex items-center gap-6 px-4 text-sm text-super-text/60 font-medium">
+            <a href="#about" class="hover:text-super-purple transition-colors">About</a>
+            <a href="#works" class="hover:text-super-purple transition-colors">Works</a>
+            <a href="#whom" class="hover:text-super-purple transition-colors">Whom</a>
+        </div>
+        <div class="flex items-center gap-2 pr-2">
+            <button class="bg-super-purple text-white text-[10px] px-4 py-2 rounded-full font-bold uppercase tracking-wider hover:scale-105 transition-all start-btn">
+                Workspace
+            </button>
+        </div>
+    </nav>
+
+    <div id="landingEcosystem" class="relative pt-48 pb-32 flex flex-col items-center">
+        <section id="about" class="max-w-5xl mx-auto px-6 text-center mb-32 reveal-3d">
+            <div class="animate-in fade-in slide-in-from-bottom-8 duration-1000 space-y-6">
+                <h1 class="text-[5rem] leading-[1.1] font-medium tracking-tight">
+                    Analyze Your <br/>
+                    Mind <span class="font-serif italic text-super-text/90">Protect</span> <br/>
+                    Your <span class="font-serif italic text-super-text/90">Wellness</span>
+                </h1>
+                
+                <p class="text-lg text-super-text/50 max-w-2xl mx-auto font-light mt-8">
+                    Everything you seek is already within you. BurnoutGuard personalizes your diagnostic journey, clears stress blocks, and aligns you with your highest potential.
+                </p>
+
+                <div class="pt-10">
+                    <button class="super-btn px-8 py-4 text-sm start-btn shadow-[0_0_30px_rgba(255,255,255,0.2)]">
+                        Begin Diagnostic
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section id="works" class="max-w-6xl mx-auto px-6 mt-20 grid grid-cols-1 md:grid-cols-3 gap-6 w-full text-super-text">
+            <div class="md:col-span-1 h-80 glass-card p-8 flex flex-col justify-between relative overflow-hidden group reveal-3d stagger-1">
+                <div class="absolute inset-0 bg-gradient-to-br from-super-purple/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div>
+                    <div class="w-12 h-12 rounded-full border border-super-border flex items-center justify-center mb-6">
+                        <span class="text-super-text font-serif italic text-xl">+</span>
+                    </div>
+                    <h3 class="text-2xl font-medium mb-2">Input Your Current Reality</h3>
+                </div>
+                <p class="text-sm text-super-text/50">Reflect on where you are and where you want to be.</p>
+            </div>
+            
+            <div class="md:col-span-1 h-80 glass-card p-8 flex flex-col justify-between relative overflow-hidden group reveal-3d stagger-2">
+                <div class="absolute inset-0 bg-gradient-to-br from-super-purple/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div class="relative z-10">
+                    <div class="w-12 h-12 rounded-full bg-super-purple flex items-center justify-center mb-6 shadow-[0_0_20px_rgba(124,58,237,0.4)]">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    </div>
+                    <h3 class="text-2xl font-medium mb-2 text-super-text">AI Analyzes Subconscious</h3>
+                </div>
+                <p class="text-sm text-super-text/50 relative z-10">Receive tailored patterns, prompts, and deep insights.</p>
+            </div>
+
+            <div class="md:col-span-1 h-80 glass-card p-8 flex flex-col justify-between relative overflow-hidden group reveal-3d stagger-3">
+                <div class="absolute inset-0 bg-gradient-to-br from-super-purple/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div class="absolute right-0 bottom-0 w-48 h-48 bg-white/5 rounded-tl-full blur-2xl"></div>
+                <div class="relative z-10">
+                    <div class="w-12 h-12 rounded-full border border-super-border flex items-center justify-center mb-6">
+                        <span class="text-super-text font-medium text-lg">89%</span>
+                    </div>
+                    <h3 class="text-2xl font-medium mb-2 text-super-text">Synthesize Action Protocol</h3>
+                </div>
+                <p class="text-sm text-super-text/50 relative z-10">Actionable interventions delivered with clinical precision.</p>
+            </div>
+        </section>
+
+        <section id="whom" class="max-w-4xl mx-auto px-6 mt-40 text-center space-y-12 pb-20 text-super-text reveal-3d">
+            <h2 class="text-4xl font-medium tracking-tight">Designed for <span class="font-serif italic text-super-purple">Global Minds</span></h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+                <div class="space-y-4">
+                    <div class="h-px w-full bg-super-border"></div>
+                    <p class="text-xs uppercase tracking-widest text-super-text/50">Students</p>
+                </div>
+                <div class="space-y-4">
+                    <div class="h-px w-full bg-super-border"></div>
+                    <p class="text-xs uppercase tracking-widest text-super-text/50">Researchers</p>
+                </div>
+                <div class="space-y-4">
+                    <div class="h-px w-full bg-super-border"></div>
+                    <p class="text-xs uppercase tracking-widest text-super-text/50">Institutions</p>
+                </div>
+                <div class="space-y-4">
+                    <div class="h-px w-full bg-super-border"></div>
+                    <p class="text-xs uppercase tracking-widest text-super-text/50">Wellness Centers</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- macOS Themed Credits Section -->
+        <section id="credits" class="max-w-3xl mx-auto px-6 mt-20 pb-32 reveal-3d credits-container min-h-[500px]">
+            <div id="creditsWindow" class="window-inner">
+                <!-- Front Face -->
+                <div class="window-front w-full bg-white/80 dark:bg-black/40 backdrop-blur-xl border border-super-border shadow-2xl overflow-hidden">
+                    <!-- Title Bar -->
+                    <div class="h-10 bg-black/5 dark:bg-white/5 border-b border-super-border flex items-center px-4 justify-between relative z-[60]">
+                        <div class="flex gap-2">
+                            <div id="closeBtn" class="w-3 h-3 rounded-full bg-[#ff5f57] cursor-pointer hover:scale-110 active:scale-95 transition-all shadow-inner shadow-black/20 pointer-events-auto" title="Close"></div>
+                            <div id="minimizeBtn" class="w-3 h-3 rounded-full bg-[#ffbd2e] cursor-pointer hover:scale-110 active:scale-95 transition-all shadow-inner shadow-black/20 pointer-events-auto" title="Minimize"></div>
+                            <div id="maximizeBtn" class="w-3 h-3 rounded-full bg-[#28c840] cursor-pointer hover:scale-110 active:scale-95 transition-all shadow-inner shadow-black/20 pointer-events-auto" title="Maximize"></div>
+                        </div>
+                        <span class="text-[10px] uppercase tracking-widest text-super-text/40 font-semibold select-none">Contributors.app</span>
+                        <div class="w-12"></div>
+                    </div>
+                    
+                    <!-- Content Area -->
+                    <div class="p-10 space-y-8">
+                        <header class="space-y-2">
+                            <h3 class="text-2xl font-medium text-super-text">The <span class="font-serif italic text-super-purple">Architects</span></h3>
+                            <p class="text-sm text-super-text/60 leading-relaxed max-w-xl">
+                                Bridging the gap between clinical psychology and predictive AI to create a safer academic ecosystem for the modern student.
+                            </p>
+                        </header>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="p-4 rounded-xl bg-super-purple/5 border border-super-purple/10 group hover:border-super-purple/30 transition-all">
+                                <p class="text-xs text-super-text/40 mb-1 group-hover:text-super-purple transition-colors">Developer</p>
+                                <p class="text-sm font-medium text-super-text">Arpan Nagar</p>
+                            </div>
+                            <div class="p-4 rounded-xl bg-super-purple/5 border border-super-purple/10 group hover:border-super-purple/30 transition-all">
+                                <p class="text-xs text-super-text/40 mb-1 group-hover:text-super-purple transition-colors">Design / Idea</p>
+                                <p class="text-sm font-medium text-super-text">Annya Sharma</p>
+                            </div>
+                            <div class="p-4 rounded-xl bg-super-purple/5 border border-super-purple/10 group hover:border-super-purple/30 transition-all">
+                                <p class="text-xs text-super-text/40 mb-1 group-hover:text-super-purple transition-colors">Research</p>
+                                <p class="text-sm font-medium text-super-text">Rajat Pundir</p>
+                            </div>
+                        </div>
+
+                        <footer class="pt-6 border-t border-super-border">
+                            <p class="text-[10px] text-super-text/30 italic">© 2024 Superconscious Intelligence Labs. All vectors synthesized.</p>
+                        </footer>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Architects Reveal Card [NEW] -->
+            <div id="architectsCard" style="display: none;" class="animate-in fade-in zoom-in duration-700 max-w-lg mx-auto">
+                <header class="space-y-4">
+                    <div class="w-12 h-1 px bg-super-purple/40 mx-auto"></div>
+                    <h4 class="text-3xl font-serif italic text-super-text">Collective <span class="font-sans not-italic font-bold tracking-tighter uppercase">Intelligence</span></h4>
+                    <p class="text-xs text-super-text/40 uppercase tracking-[0.2em] font-mono">Synthetically Engineered By</p>
+                </header>
+                
+                <div class="py-10 grid grid-cols-1 gap-6">
+                    <div class="text-lg font-medium tracking-tight text-super-text">Arpan Nagar</div>
+                    <div class="text-lg font-medium tracking-tight text-super-text">Annya Sharma</div>
+                    <div class="text-lg font-medium tracking-tight text-super-text">Rajat Pundir</div>
+                </div>
+
+                <button id="restoreWindow" class="mt-8 px-8 py-3 bg-super-purple/10 border border-super-purple/30 text-super-purple text-[10px] uppercase tracking-widest rounded-full hover:bg-super-purple hover:text-white transition-all">
+                    Restore Interface
+                </button>
+            </div>
+        </section>
     </div>
-  </div>
 
-  <nav class="navbar" id="navbar">
-    <div class="nav-content">
-      <div class="nav-brand">
-        <div class="logo-small"><i data-lucide="shield-check" style="width: 18px; height: 18px;"></i></div>
-        <span>BurnoutGuard</span>
-      </div>
-      <div class="nav-links">
-        <a href="#features" class="nav-link">Platform</a>
-        <a href="#about" class="nav-link">Clinical Approach</a>
-        <button class="btn-nav start-btn">Start Assessment</button>
-      </div>
+    <main id="mainApp" class="hidden relative pt-32 pb-40">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+                
+                <div class="lg:col-span-7 space-y-12">
+                    <header class="animate-in fade-in slide-in-from-left-4 duration-1000">
+                        <h2 class="text-4xl font-medium tracking-tight mb-2">Configure <span class="font-serif italic text-super-purple">Profile</span></h2>
+                        <p class="text-super-text/50">Input physiological and academic markers</p>
+                    </header>
+
+                    <div class="glass-card p-10 space-y-12">
+                        <section class="space-y-6">
+                            <h3 class="text-sm font-medium text-super-text/70 border-b border-super-border pb-4">Identity Parameters</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="space-y-2">
+                                    <label class="text-xs text-super-text/50 pl-1">Student Name</label>
+                                    <input id="studentName" type="text" class="w-full bg-black/5 dark:bg-[#161320] border border-super-border rounded-xl px-5 py-3 outline-none focus:border-super-purple transition-all text-sm font-medium" />
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="text-xs text-super-text/50 pl-1">Enrollment No.</label>
+                                    <input id="enrollment" type="text" class="w-full bg-black/5 dark:bg-[#161320] border border-super-border rounded-xl px-5 py-3 outline-none focus:border-super-purple transition-all text-sm font-medium" />
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="text-xs text-super-text/50 pl-1">Institution</label>
+                                    <input id="college" type="text" class="w-full bg-black/5 dark:bg-[#161320] border border-super-border rounded-xl px-5 py-3 outline-none focus:border-super-purple transition-all text-sm font-medium" />
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="text-xs text-super-text/50 pl-1">Curriculum</label>
+                                    <input id="course" type="text" class="w-full bg-black/5 dark:bg-[#161320] border border-super-border rounded-xl px-5 py-3 outline-none focus:border-super-purple transition-all text-sm font-medium" />
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="space-y-6">
+                            <h3 class="text-sm font-medium text-super-text/70 border-b border-super-border pb-4">Diagnostic Vectors</h3>
+                            <div id="formFields" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            </div>
+                        </section>
+
+                        <div class="pt-4">
+                            <button id="predictBtn" class="super-btn w-full py-4 text-sm shadow-[0_0_20px_rgba(255,255,255,0.1)]">
+                                Synthesize Results
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <aside class="lg:col-span-5 relative">
+                    <div class="sticky top-32">
+                        <section class="glass-card p-10 min-h-[600px] flex flex-col relative overflow-hidden group">
+                            <div id="orbContainer" class="absolute inset-0 z-0 opacity-40 dark:opacity-60 pointer-events-none"></div>
+                            
+                            <div class="flex items-center justify-between mb-8 relative z-10">
+                                <h3 class="text-lg font-serif italic text-super-text">Daily Insights</h3>
+                                <button id="pdfBtn" class="disabled:opacity-20 bg-super-purple/10 dark:bg-white/5 border border-super-border px-4 py-2 rounded-full text-xs text-super-text hover:bg-super-purple hover:text-white transition-all font-medium" disabled>Export</button>
+                            </div>
+
+                            <div id="result" class="relative z-10 flex-1 flex flex-col items-center justify-center text-super-text">
+                                <div id="awaitingData" class="w-32 h-32 rounded-full border border-dashed border-super-border flex items-center justify-center opacity-50">
+                                    <p class="text-xs text-center px-4">Awaiting Data...</p>
+                                </div>
+                                <canvas id="radarChart" class="w-full h-full max-w-[280px] max-h-[280px] hidden"></canvas>
+                            </div>
+                            
+                            <div class="absolute bottom-0 right-0 w-full h-1/2 bg-gradient-to-t from-super-purple/10 to-transparent pointer-events-none"></div>
+                        </section>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </main>
+
+    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 z-[150] px-6 py-4 rounded-2xl bg-super-purple text-white font-medium text-sm shadow-2xl shadow-super-purple/40 translate-y-[200%] opacity-0 scale-90 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] flex items-center gap-3 pointer-events-none">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.268 17c-.77 1.333.192 3 1.732 3z"></path></svg>
+        <span id="toastMsg">Incomplete Diagnostic</span>
     </div>
-  </nav>
 
-  <div id="landingEcosystem">
-    <section class="landing">
-      <div class="landing-content">
-        <div class="badge animate-slide-up">Validated AI Screening</div>
-        <h1 class="animate-slide-up delay-1">Protect your mental clarity with <span class="gradient-text">precision.</span></h1>
-        <p class="animate-slide-up delay-2">Understand and mitigate your burnout risk utilizing our constrained, logic-driven machine learning architecture designed for students.</p>
-        <div class="landing-actions animate-slide-up delay-2">
-          <button class="btn-hero start-btn">Begin Confidential Assessment</button>
+    <div id="analysisOverlay" class="fixed inset-0 z-[100] bg-white/90 dark:bg-[#07050e]/90 backdrop-blur-md flex flex-col items-center justify-center p-6 hidden">
+        <div class="w-24 h-24 relative flex items-center justify-center mb-8">
+            <div class="absolute inset-0 border-t-2 border-l-2 border-super-purple rounded-full animate-spin duration-1000"></div>
+            <div class="w-12 h-12 bg-super-purple/20 rounded-full animate-pulse"></div>
         </div>
-      </div>
-    </section>
+        <p id="loaderStatus" class="text-lg font-serif italic text-super-text/80 mb-4">Connecting to Superconscious...</p>
+        <div class="w-64 h-1 bg-super-border rounded-full overflow-hidden">
+            <div id="loaderProgress" class="h-full bg-super-purple w-0 transition-all duration-[1000ms] ease-linear"></div>
+        </div>
+    </div>
 
-    <section id="features" class="features-section">
-      <div class="features-grid wrap">
-        <div class="feature-card animate-slide-up">
-          <div class="icon-wrap"><i data-lucide="brain"></i></div>
-          <h3>Cognitive Mapping</h3>
-          <p>Evaluates 10 rigorously tested behavioral metrics to determine your exact placement on the exhaustion spectrum.</p>
-        </div>
-        <div class="feature-card animate-slide-up delay-1">
-          <div class="icon-wrap"><i data-lucide="bar-chart-3"></i></div>
-          <h3>Monotonic Logic</h3>
-          <p>Powered by a constrained Gradient Boosting model that guarantees medically logical, monotonic risk scoring.</p>
-        </div>
-        <div class="feature-card animate-slide-up delay-2">
-          <div class="icon-wrap"><i data-lucide="lock"></i></div>
-          <h3>Absolute Privacy</h3>
-          <p>Your inputs are processed temporarily in a secure session. No permanent diagnostic records are stored.</p>
-        </div>
-      </div>
-    </section>
+    <!-- Backend Data Bridge -->
+    <script id="fields-json" type="application/json">
+        {{ fields | tojson }}
+    </script>
 
-    <section id="about" class="features-section" style="background: #F8FAFC; border-top: 1px solid var(--border-color); text-align: center; padding-top: 80px;">
-      <div class="wrap" style="max-width: 800px;">
-        <div class="badge">Scientific Methodology</div>
-        <h2 style="font-size: 36px; margin-bottom: 24px; color: var(--text-main);">Built on Validated Logic</h2>
-        <p style="color: var(--text-muted); font-size: 18px; line-height: 1.6; margin-bottom: 40px;">
-          Traditional AI models blindly follow data, often leading to algorithmic hallucinations. BurnoutGuard is different. We utilize <strong>Post-Hoc Coefficient Constraints</strong> on carefully curated student datasets. This forces the neural engine to respect strict clinical logic: as your exhaustion symptoms increase, your probability score is mathematically guaranteed to rise. 
-        </p>
-      </div>
-    </section>
-
-    <footer class="footer">
-      <div class="wrap footer-content">
-        <div class="footer-brand">
-          <div class="logo-small"><i data-lucide="shield-check" style="width: 14px; height: 14px;"></i></div>
-          <span>BurnoutGuard</span>
-        </div>
-        <p class="footer-text">Advanced cognitive screening and prevention strategies.</p>
-        <p class="footer-copyright">© 2026 BurnoutGuard Analytics. All rights reserved.</p>
-      </div>
-    </footer>
-  </div>
-
-  <main class="wrap hidden" id="mainApp">
-    <header class="app-header animate-slide-up">
-      <div class="brand">
-        <div class="logo"><i data-lucide="activity"></i></div>
-        <div>
-          <h1>Cognitive Assessment</h1>
-          <p class="sub">Please answer the following 10 metrics honestly for an accurate baseline.</p>
-        </div>
-      </div>
-    </header>
-
-    <section class="layout">
-      <div class="card animate-slide-up delay-1">
-        <div class="cardTop">
-          <h2>Student Profile</h2>
-          <div class="stepLabel" id="stepLabel">Step 1 of 3</div>
-        </div>
-
-        <div class="profile">
-          <div class="row">
-            <div class="pfield">
-              <label>Full Name</label>
-              <input id="studentName" type="text" placeholder="e.g. Arpan Nagar">
-            </div>
-            <div class="pfield">
-              <label>Institution</label>
-              <input id="college" type="text" placeholder="e.g. Bennett University">
-            </div>
-          </div>
-          <div class="row">
-            <div class="pfield">
-              <label>Program / Major</label>
-              <input id="course" type="text" placeholder="e.g. BTech CSE">
-            </div>
-            <div class="pfield">
-              <label>Current Semester</label>
-              <input id="semester" type="number" placeholder="e.g. 4">
-            </div>
-          </div>
-        </div>
-
-        <div class="stepper-modern">
-          <div class="step-dot active" id="stepDot1"></div>
-          <div class="step-line"></div>
-          <div class="step-dot" id="stepDot2"></div>
-          <div class="step-line"></div>
-          <div class="step-dot" id="stepDot3"></div>
-        </div>
-
-        <div id="formFields" class="fields"></div>
-
-        <div class="actions">
-          <button id="backBtn" class="btn ghost" disabled>Previous</button>
-          <button id="nextBtn" class="btn">Continue</button>
-          <button id="predictBtn" class="btn-predict hidden">Generate Report</button>
-        </div>
-      </div>
-
-      <div class="card animate-slide-up delay-2">
-        <div class="resultHeader">
-          <h2>Clinical Insights</h2>
-          <button id="pdfBtn" class="btn mini ghost" disabled>
-            <i data-lucide="download" style="width:14px; height:14px; vertical-align:middle; margin-right:4px;"></i> Export PDF
-          </button>
-        </div>
-        <div id="result" class="result empty">
-           <div class="empty-state">
-              <div class="icon-wrap-large"><i data-lucide="clipboard-list"></i></div>
-              <p>Complete the assessment on the left to generate your personalized AI risk analysis.</p>
-           </div>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <script id="fields-json" type="application/json">{{ fields | tojson }}</script>
-  <script src="/static/app.js"></script>
+    <!-- App Logic -->
+    <script src="/static/app.js"></script>
 </body>
 </html>

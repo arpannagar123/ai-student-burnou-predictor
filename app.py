@@ -90,23 +90,44 @@ def compute_result_from_payload(data: dict):
     impacts.sort(key=lambda x: abs(x["delta"]), reverse=True)
     top_factors = impacts[:5]
 
-    tips = {
-        "Low": ["Maintain routine and sleep schedule.", "Use breaks and light exercise."],
-        "Moderate": ["Plan weekly tasks.", "Reduce late-night screen time.", "Talk to mentor/friend."],
-        "High": ["Prioritize sleep and recovery.", "Reduce workload if possible.", "Consider counselling support."]
+    # Dynamic Suggestion Mapping
+    FEATURE_TIPS = {
+        "Feeling overwhelmed with academic workload": "Prioritize: Use Pomodoro (50/10) for your next study session.",
+        "Frequency of rapid heartbeats or palpitations": "Physiological: Practice Box Breathing (4-4-4) 3x daily.",
+        "Level of conflict between academics and extracurriculars": "Boundary: Review and prune weekend commitments this week.",
+        "Frequency of severe anxiety or tension": "Mindfulness: 10-min grounding meditation before bed.",
+        "Frequency of sleep problems or insomnia": "Hygiene: No blue light/screens 1 hour before sleep.",
+        "Frequency of doubting academic subject choice": "Counsel: Schedule a meeting with your academic advisor.",
+        "Frequency of feeling persistent sadness or low mood": "Support: Reach out to a friend or the campus wellness group.",
+        "Difficulty finding time for relaxation and leisure": "Leisure: Block 1 hour of 'Unscheduled Time' in your digital calendar.",
+        "Frequency of personal relationships causing stress": "Social: Express your stress state to those close to you.",
+        "Difficulty concentrating on academic tasks": "Environment: Study in a zero-distraction zone (Silent Library)."
     }
-    action_plan = {
-        "Low": ["Maintain schedule", "Exercise 2–3x/week", "Track stress weekly"],
-        "Moderate": ["Cut 1 deadline this week", "Sleep +1 hour", "Daily 20 min walk"],
-        "High": ["Immediate rest day", "Talk to mentor/faculty", "Seek counsellor support"]
+
+    # Build dynamic action plan based on top factors
+    dynamic_actions = []
+    for f in top_factors:
+        if f["feature"] in FEATURE_TIPS and f["delta"] > 0: # Only if it increases risk
+            dynamic_actions.append(FEATURE_TIPS[f["feature"]])
+    
+    # Generic advice as fallback/padding to ensure at least 5 items
+    generic_advice = {
+        "Low": ["Maintain routine", "Track mood weekly", "Stay hydrated"],
+        "Moderate": ["Plan weekly tasks", "Reduce caffeine", "Talk to mentor"],
+        "High": ["Immediate rest day", "Seek counselor support", "Reduce workload"]
     }
+    
+    final_plan = (dynamic_actions + generic_advice[risk])[:5]
+    # Ensure at least 5 items if dynamic list is small
+    while len(final_plan) < 5:
+        final_plan.append("Protocol: Maintain healthy habits and regular check-ins.")
 
     result = {
         "prediction": pred,
         "probability": round(prob, 4),
         "risk_level": risk,
-        "tips": tips[risk],
-        "action_plan": action_plan[risk],
+        "tips": final_plan, # Using the dynamic plan for tips too
+        "action_plan": final_plan,
         "top_factors": top_factors,
         "assessment": {
             "score": score,

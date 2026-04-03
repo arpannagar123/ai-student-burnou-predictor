@@ -1,331 +1,479 @@
-function readFieldsFromHTML() {
-  const tag = document.getElementById("fields-json");
-  const raw = (tag?.textContent || "").trim();
-  if (!raw) throw new Error("No fields received from backend.");
-  return JSON.parse(raw);
+function readFields() {
+    const tag = document.getElementById('fields-json');
+    return tag ? JSON.parse(tag.textContent) : [];
 }
 
-function makeLikertSelect() {
-  const s = document.createElement("select");
-  s.innerHTML = `
-    <option value="">Select an option...</option>
-    <option value="1">1 – Not at all</option>
-    <option value="2">2 – Slight</option>
-    <option value="3">3 – Moderate</option>
-    <option value="4">4 – High</option>
-    <option value="5">5 – Very High</option>
-  `;
-  return s;
+function formatLabel(str) {
+    return str.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+}
+
+function makeMetricCard(fieldName) {
+    const card = document.createElement('div');
+    card.className = "p-4 rounded-2xl bg-black/5 dark:bg-[#161320] border border-super-border hover:border-super-purple/50 transition-all group flex flex-col gap-3 relative";
+    
+    card.innerHTML = `
+        <label class="text-xs text-super-text/50 pl-1 group-hover:text-super-purple transition-colors">${formatLabel(fieldName)}</label>
+        <select data-col="${fieldName}" class="w-full bg-transparent border-none px-1 outline-none text-sm font-medium cursor-pointer text-super-text">
+            <option value="" class="bg-white dark:bg-[#161320]">Select Level...</option>
+            <option value="1" class="bg-white dark:bg-[#161320]">Level 1 - Minimal</option>
+            <option value="2" class="bg-white dark:bg-[#161320]">Level 2 - Slight</option>
+            <option value="3" class="bg-white dark:bg-[#161320]">Level 3 - Moderate</option>
+            <option value="4" class="bg-white dark:bg-[#161320]">Level 4 - Significant</option>
+            <option value="5" class="bg-white dark:bg-[#161320]">Level 5 - Critical</option>
+        </select>
+    `;
+    return card;
 }
 
 let FIELDS = [];
-let currentStep = 1; 
-let lastPayload = null; 
+let lastPayload = null;
+let orbState = {
+    scene: null, camera: null, renderer: null, orb: null, light: null, clock: new THREE.Clock()
+};
+let radarChart = null;
 
-function splitIntoSteps(fields) {
-  // Dynamically splits 10 questions into 3 chunks safely
-  const a = fields.slice(0, 4);
-  const b = fields.slice(4, 7);
-  const c = fields.slice(7, 10);
-  return {1: a, 2: b, 3: c};
-}
+function initOrb() {
+    const container = document.getElementById('orbContainer');
+    if (!container || orbState.renderer) return;
 
-function setStepper(step) {
-  [1, 2, 3].forEach(i => {
-    const dot = document.getElementById(`stepDot${i}`);
-    if(dot) {
-        dot.classList.toggle("active", i === step);
-        dot.classList.toggle("done", i < step);
+    orbState.scene = new THREE.Scene();
+    orbState.camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+    orbState.camera.position.z = 5;
+
+    orbState.renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+    orbState.renderer.setSize(container.clientWidth, container.clientHeight);
+    container.appendChild(orbState.renderer.domElement);
+
+    const geo = new THREE.SphereGeometry(2, 64, 64);
+    const mat = new THREE.MeshStandardMaterial({
+        color: 0x7c3aed,
+        wireframe: true,
+        transparent: true,
+        opacity: 0.2
+    });
+    orbState.orb = new THREE.Mesh(geo, mat);
+    orbState.scene.add(orbState.orb);
+
+    const ambient = new THREE.AmbientLight(0xffffff, 0.5);
+    orbState.scene.add(ambient);
+
+    orbState.light = new THREE.PointLight(0x7c3aed, 2, 10);
+    orbState.light.position.set(2, 2, 2);
+    orbState.scene.add(orbState.light);
+
+    function animate() {
+        requestAnimationFrame(animate);
+        const time = orbState.clock.getElapsedTime();
+        
+        if (orbState.orb) {
+            orbState.orb.rotation.y += 0.005;
+            orbState.orb.rotation.z += 0.002;
+            const pulse = 1 + Math.sin(time * 0.5) * 0.05;
+            orbState.orb.scale.set(pulse, pulse, pulse);
+        }
+
+        if (orbState.light) {
+            orbState.light.position.x = Math.sin(time) * 3;
+            orbState.light.position.z = Math.cos(time) * 3;
+        }
+
+        orbState.renderer.render(orbState.scene, orbState.camera);
     }
-  });
-  
-  const stepLabel = document.getElementById("stepLabel");
-  if(stepLabel) stepLabel.textContent = `Step ${step} of 3`;
+    animate();
 
-  document.getElementById("backBtn").disabled = (step === 1);
-  
-  const nextBtn = document.getElementById("nextBtn");
-  const predictBtn = document.getElementById("predictBtn");
-  
-  if (step === 3) {
-    nextBtn.classList.add("hidden");
-    predictBtn.classList.remove("hidden");
-  } else {
-    nextBtn.classList.remove("hidden");
-    predictBtn.classList.add("hidden");
-  }
+    window.addEventListener('resize', () => {
+        if (orbState.renderer) {
+            orbState.camera.aspect = container.clientWidth / container.clientHeight;
+            orbState.camera.updateProjectionMatrix();
+            orbState.renderer.setSize(container.clientWidth, container.clientHeight);
+        }
+    });
 }
 
-function buildForm(stepFields) {
-  const root = document.getElementById("formFields");
-  if(!root) return;
-  root.innerHTML = "";
+function updateOrbIntensity(prob) {
+    if (!orbState.orb) return;
+    const intensity = 0.2 + (prob * 0.6);
+    orbState.orb.material.opacity = intensity;
+    orbState.orb.material.wireframe = prob < 0.6;
+    orbState.light.intensity = 2 + (prob * 10);
+}
 
-  stepFields.forEach(f => {
-    const box = document.createElement("div");
-    box.className = "field";
+function updateRadar(payload) {
+    const ctx = document.getElementById('radarChart');
+    if (!ctx) return;
 
-    const label = document.createElement("label");
-    label.textContent = f.name;
+    ctx.classList.remove('hidden');
+    const awaiting = document.getElementById('awaitingData');
+    if (awaiting) awaiting.classList.add('hidden');
 
-    const input = makeLikertSelect();
-    input.dataset.col = f.name;
-    
-    const saved = window.__savedAnswers?.[f.name];
-    if (saved !== undefined) input.value = saved;
+    const labels = FIELDS.map(f => formatLabel(f.name).split(' ').slice(0, 2).join(' '));
+    const dataValues = FIELDS.map(f => parseInt(payload[f.name]) || 0);
 
-    const saveInput = () => {
-      window.__savedAnswers = window.__savedAnswers || {};
-      window.__savedAnswers[f.name] = input.value;
-    };
-    input.addEventListener("change", saveInput);
+    if (radarChart) {
+        radarChart.destroy();
+    }
 
-    box.appendChild(label);
-    box.appendChild(input);
-    root.appendChild(box);
-  });
+    const color = '#7c3aed';
+    const textColor = 'rgba(255,255,255,0.5)';
+
+    radarChart = new Chart(ctx, {
+        type: 'radar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Stress Profile',
+                data: dataValues,
+                backgroundColor: 'rgba(124, 58, 237, 0.2)',
+                borderColor: color,
+                borderWidth: 2,
+                pointBackgroundColor: color,
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: color
+            }]
+        },
+        options: {
+            scales: {
+                r: {
+                    min: 0,
+                    max: 5,
+                    beginAtZero: true,
+                    ticks: { display: false, stepSize: 1 },
+                    grid: { color: 'rgba(255,255,255,0.1)' },
+                    angleLines: { color: 'rgba(255,255,255,0.1)' },
+                    pointLabels: {
+                        color: textColor,
+                        font: { size: 9, family: 'Inter' }
+                    }
+                }
+            },
+            plugins: {
+                legend: { display: false }
+            },
+            responsive: true,
+            maintainAspectRatio: true
+        }
+    });
+}
+
+function buildForm(fields) {
+    const root = document.getElementById('formFields');
+    if(!root) return;
+    root.innerHTML = '';
+    fields.forEach(f => root.appendChild(makeMetricCard(f.name)));
 }
 
 function getPayload(allFields) {
-  const payload = {
-    __profile: {
-      studentName: document.getElementById("studentName")?.value || "",
-      college: document.getElementById("college")?.value || "",
-      course: document.getElementById("course")?.value || "",
-      semester: document.getElementById("semester")?.value || ""
-    }
-  };
-  const saved = window.__savedAnswers || {};
-  allFields.forEach(f => {
-    payload[f.name] = saved[f.name] ?? "";
-  });
-  return payload;
-}
-
-function riskClass(level){
-  if(level === "High") return "high";
-  if(level === "Moderate") return "mid";
-  return "low";
-}
-
-function factorBars(topFactors){
-  if (!topFactors || topFactors.length === 0) return "";
-  const maxAbs = Math.max(...topFactors.map(x => Math.abs(x.delta)), 0.0001);
-  return topFactors.map(f => {
-    const w = Math.round((Math.abs(f.delta) / maxAbs) * 100);
-    const dir = f.delta >= 0 ? "Increases Risk" : "Lowers Risk";
-    return `
-      <div class="factor">
-        <div class="factorHead">
-          <span>${f.feature}</span>
-          <b>${dir}</b>
-        </div>
-        <div class="factorBar"><div style="width:${w}%"></div></div>
-      </div>
-    `;
-  }).join("");
+    const payload = {
+        __profile: {
+            studentName: document.getElementById('studentName')?.value || '',
+            enrollment: document.getElementById('enrollment')?.value || '',
+            college: document.getElementById('college')?.value || '',
+            course: document.getElementById('course')?.value || '',
+            semester: document.getElementById('semester')?.value || ''
+        }
+    };
+    allFields.forEach(f => {
+        const sel = document.querySelector(`select[data-col="${f.name}"]`);
+        payload[f.name] = sel?.value || '';
+    });
+    return payload;
 }
 
 function renderResult(data) {
-  const r = document.getElementById("result");
-  r.classList.remove("empty");
+    const r = document.getElementById('result');
+    if(!r) return;
+    
+    const pct = Math.round((data.probability || 0) * 100);
+    const topFactors = data.top_factors || [];
+    const actions = data.action_plan || ["Initiate Mindfulness Protocol"];
 
-  const pct = Math.round(data.probability * 100);
-  const cls = riskClass(data.risk_level);
+    r.innerHTML = `
+        <div class="w-full h-full flex flex-col justify-between animate-in fade-in zoom-in duration-700">
+            
+            <div class="flex items-center gap-4 p-4 rounded-2xl bg-super-purple/5 border border-super-border mb-8">
+                <div class="w-12 h-12 rounded-full bg-super-purple flex items-center justify-center">
+                    <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                </div>
+                <div>
+                    <p class="text-xs text-super-text/50">Current State</p>
+                    <p class="text-lg font-medium">${data.risk_level || 'Calculating...'}</p>
+                </div>
+                <div class="ml-auto text-right">
+                    <div class="text-3xl font-medium tracking-tight">${pct}%</div>
+                </div>
+            </div>
 
-  const assess = data.assessment || {};
-  const warn = assess.warning ? `<div class="warn"><i data-lucide="alert-triangle" style="width:16px;height:16px;"></i> ${assess.warning}</div>` : "";
+            <div class="space-y-4 mb-8 overflow-y-auto max-h-[300px] pr-2 custom-scrollbar">
+                <h4 class="text-sm font-medium text-super-text/70">Subconscious Patterns</h4>
+                ${topFactors.length > 0 ? topFactors.map(f => {
+                    const isNegative = f.delta >= 0; 
+                    const displayDelta = Math.abs(f.delta);
+                    return `
+                    <div class="space-y-2">
+                        <div class="flex justify-between text-xs">
+                            <span class="text-super-text/80">${f.feature}</span>
+                            <span class="${isNegative ? 'text-super-purple' : 'text-emerald-500'}">${Math.round(displayDelta * 100)}%</span>
+                        </div>
+                        <div class="h-1.5 w-full bg-black/5 dark:bg-white/5 rounded-full overflow-hidden">
+                            <div class="h-full ${isNegative ? 'bg-gradient-to-r from-super-purple to-purple-400' : 'bg-emerald-500'}" style="width: ${Math.min(100, displayDelta * 1000)}%"></div>
+                        </div>
+                    </div>
+                    `;
+                }).join('') : '<p class="text-xs text-super-text/30 italic">No significant patterns detected.</p>'}
+            </div>
 
-  r.innerHTML = `
-    <div class="reportTop animate-slide-up">
-      <div class="pill ${cls}">${data.risk_level} Risk Level</div>
-      <div class="score">${pct}%</div>
-      <div class="muted" style="color: var(--text-muted); font-weight: 500;">Calculated Burnout Probability</div>
-      ${warn}
-    </div>
-
-    <div class="assessBox animate-slide-up delay-1">
-      <div class="assessLeft">
-        <div class="assessTitle">Clinical Score</div>
-        <div class="assessScore">${assess.score ?? "—"}/100</div>
-        <div class="assessBand">${assess.band ?? ""}</div>
-      </div>
-      <div class="assessRight">
-        <div class="muted" style="color: var(--text-muted); font-size: 13px; margin-bottom: 4px; font-weight: 600;">Answered</div>
-        <b style="font-size: 22px; color: var(--text-main);">${assess.answered ?? 0}/${assess.total ?? 10}</b>
-      </div>
-    </div>
-
-    <div class="split animate-slide-up delay-2">
-      <div class="panel">
-        <h3>Personalized Protocol</h3>
-        <ul>${(data.action_plan || []).map(x => `<li>${x}</li>`).join("")}</ul>
-      </div>
-      <div class="panel">
-        <h3>General Wellness Tips</h3>
-        <ul>${(data.tips || []).map(x => `<li>${x}</li>`).join("")}</ul>
-      </div>
-    </div>
-
-    <div class="panel animate-slide-up delay-2" style="margin-top:20px;">
-        <h3>Primary Risk Drivers</h3>
-        <p style="color: var(--text-muted); font-size: 14px; margin-top:-8px; margin-bottom: 16px;">Metrics currently elevating your probability score:</p>
-        <div class="factors">${factorBars(data.top_factors || [])}</div>
-    </div>
-  `;
-  
-  if(window.lucide) window.lucide.createIcons();
-}
-
-function renderError(msg) {
-  const r = document.getElementById("result");
-  r.classList.remove("empty");
-  r.innerHTML = `<div class="warn"><i data-lucide="alert-circle" style="width:18px;height:18px;"></i> ${msg}</div>`;
-  if(window.lucide) window.lucide.createIcons();
+            <div class="mt-auto">
+                <div class="p-4 rounded-2xl bg-super-purple/5 border border-super-purple/30 relative overflow-hidden">
+                    <div class="absolute inset-0 bg-super-purple/5"></div>
+                    <div class="relative z-10 space-y-3">
+                        <p class="text-xs text-super-text/50 mb-1 font-medium italic">Protocol Insights</p>
+                        ${actions.map(action => `
+                            <div class="flex items-center justify-between">
+                                <p class="text-sm font-medium text-super-text">${action}</p>
+                                <span class="w-2 h-2 rounded-full bg-super-purple animate-pulse"></span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
 }
 
 async function simulateAnalysis() {
-  const overlay = document.getElementById("analysisOverlay");
-  const bar = document.getElementById("analysisBar");
-  const log = document.getElementById("logStream");
-  
-  overlay.classList.remove("hidden");
-  
-  const steps = [
-    { p: 20, msg: "> Aggregating clinical metrics..." },
-    { p: 50, msg: "> Applying monotonic constraints..." },
-    { p: 80, msg: "> Computing probability matrix..." },
-    { p: 100, msg: "> Generating secure protocol..." }
-  ];
-
-  for (let s of steps) {
-    await new Promise(r => setTimeout(r, 600));
-    bar.style.width = s.p + "%";
-    log.innerHTML += `<br>${s.msg}`;
-  }
-  
-  await new Promise(r => setTimeout(r, 400)); 
-  overlay.classList.add("hidden");
-  
-  setTimeout(() => {
-    bar.style.width = "0%";
-    log.innerHTML = "> SYSTEM_READY";
-  }, 400);
+    const overlay = document.getElementById('analysisOverlay');
+    const bar = document.getElementById('loaderProgress');
+    const status = document.getElementById('loaderStatus');
+    
+    if(overlay) overlay.classList.remove('hidden');
+    
+    const steps = [
+        'Connecting to Superconscious...',
+        'Analyzing Subconscious Patterns...',
+        'Synthesizing Reality Data...',
+        'Finalizing Insights...'
+    ];
+    
+    for(let i = 0; i < steps.length; i++) {
+        if(status) status.innerText = steps[i];
+        if(bar) bar.style.width = ((i+1) / steps.length * 100) + '%';
+        await new Promise(r => setTimeout(r, 250));
+    }
+    
+    if(overlay) overlay.classList.add('hidden');
 }
 
-async function predict(allFields) {
-  try {
-    const payload = getPayload(allFields);
-    lastPayload = payload;
+function initScrollReveal() {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('active');
+            }
+        });
+    }, { threshold: 0.15 });
 
-    await simulateAnalysis();
-
-    const res = await fetch("/api/predict", {
-      method: "POST",
-      headers: {"Content-Type":"application/json"},
-      body: JSON.stringify(payload)
+    document.querySelectorAll('.reveal-3d').forEach(el => {
+        observer.observe(el);
     });
-    const data = await res.json();
-    if (!res.ok) return renderError(data.error || "Prediction failed.");
+}
 
-    renderResult(data);
-    document.getElementById("pdfBtn").disabled = false;
+function showToast(msg) {
+    const toast = document.getElementById('toast');
+    const toastMsg = document.getElementById('toastMsg');
+    if(!toast || !toastMsg) return;
     
-    if(window.innerWidth < 800) {
-      document.getElementById("result").scrollIntoView({behavior: "smooth"});
+    toastMsg.innerText = msg;
+    toast.classList.remove('translate-y-[200%]', 'opacity-0', 'scale-90');
+    
+    setTimeout(() => {
+        toast.classList.add('translate-y-[200%]', 'opacity-0', 'scale-90');
+    }, 3000);
+}
+
+async function predict() {
+    try {
+        const payload = getPayload(FIELDS);
+        
+        // Validation: Check if at least 5 diagnostic vectors and profile info are filled
+        const answered = FIELDS.filter(f => payload[f.name] !== '').length;
+        const profileOk = payload.__profile.studentName && payload.__profile.enrollment;
+
+        if (!profileOk || answered < 5) {
+            showToast(`Incomplete: Please answer at least 5 of the ${FIELDS.length} assessment vectors.`);
+            return;
+        }
+
+        lastPayload = payload;
+        
+        await simulateAnalysis();
+        
+        const res = await fetch('/api/predict', {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if(!res.ok) throw new Error(data.error || 'Diagnostic computation failed.');
+        
+        renderResult(data);
+        updateOrbIntensity(data.probability || 0);
+        updateRadar(payload);
+        
+        const pdfBtn = document.getElementById('pdfBtn');
+        if(pdfBtn) pdfBtn.disabled = false;
+        
+        if (window.innerWidth < 1024) {
+            const resEl = document.getElementById('result');
+            if(resEl) resEl.scrollIntoView({ behavior: 'smooth' });
+        }
+    } catch (e) {
+        console.error("Diagnostic Error:", e);
+        const overlay = document.getElementById('analysisOverlay');
+        if(overlay) overlay.classList.add('hidden');
     }
-  } catch (e) {
-    document.getElementById("analysisOverlay").classList.add("hidden");
-    renderError(e.message || "Unexpected error.");
-  }
 }
 
 async function downloadPDF() {
-  if (!lastPayload) return;
-  const btn = document.getElementById("pdfBtn");
-  btn.innerHTML = `<i data-lucide="loader-2" class="spin" style="width:14px; height:14px; vertical-align:middle; margin-right:4px;"></i> Generating...`;
-  if(window.lucide) window.lucide.createIcons();
-  
-  const res = await fetch("/api/report_pdf", {
-    method: "POST",
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify(lastPayload)
-  });
-
-  if (!res.ok) {
-    renderError("Could not generate PDF report.");
-    btn.innerHTML = `<i data-lucide="download" style="width:14px; height:14px; vertical-align:middle; margin-right:4px;"></i> Export PDF`;
-    if(window.lucide) window.lucide.createIcons();
-    return;
-  }
-
-  const blob = await res.blob();
-  const url = window.URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "BurnoutGuard_Clinical_Report.pdf";
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  window.URL.revokeObjectURL(url);
-  btn.innerHTML = `<i data-lucide="download" style="width:14px; height:14px; vertical-align:middle; margin-right:4px;"></i> Export PDF`;
-  if(window.lucide) window.lucide.createIcons();
+    if (!lastPayload) return;
+    const btn = document.getElementById('pdfBtn');
+    const original = btn.innerText;
+    btn.innerText = 'EXPORTING...';
+    
+    try {
+        const res = await fetch('/api/report_pdf', {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify(lastPayload)
+        });
+        if (res.ok) {
+            const blob = await res.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'BurnoutGuard_Diagnostic_Report.pdf';
+            a.click();
+            window.URL.revokeObjectURL(url);
+        } else {
+            console.error('Diagnostic Report Export Failed.');
+        }
+    } catch(err) {
+        console.error('Diagnostic Report Export Failed.', err);
+    }
+    btn.innerText = original;
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  try {
-    // 1. Initialize icons
-    if(window.lucide) window.lucide.createIcons();
-
-    // 2. Bind the "Start Assessment" buttons
-    const startBtns = document.querySelectorAll(".start-btn");
-    startBtns.forEach(btn => {
-      btn.addEventListener("click", () => {
-        document.getElementById("landingEcosystem").classList.add("hidden");
-        document.getElementById("mainApp").classList.remove("hidden");
-        window.scrollTo(0, 0);
-      });
+function init() {
+    FIELDS = readFields();
+    buildForm(FIELDS);
+    
+    // Safety Wrap for UI Enhancements
+    try { initScrollReveal(); } catch(e) { console.error('ScrollReveal Init Failed:', e); }
+    
+    // Switch to Workspace
+    document.querySelectorAll('.start-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const landing = document.getElementById('landingEcosystem');
+            const main = document.getElementById('mainApp');
+            if(landing) landing.classList.add('hidden');
+            if(main) {
+                main.classList.remove('hidden');
+                // Initialize Orb only when Workspace is visible to get correct dimensions
+                initOrb();
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
     });
 
-    // 3. NEW: Bind the Navigation Links (Platform & Clinical Approach)
-    const navLinks = document.querySelectorAll(".nav-link");
-    navLinks.forEach(link => {
-      link.addEventListener("click", () => {
-        // If the user clicks a nav link while the assessment is open, switch back to the landing page
-        document.getElementById("landingEcosystem").classList.remove("hidden");
-        document.getElementById("mainApp").classList.add("hidden");
-        
-        // The browser will automatically continue to scroll to the #href target!
-      });
-    });
-
-    // 4. Load ML fields and build form
-    FIELDS = readFieldsFromHTML();
-    const stepMap = splitIntoSteps(FIELDS);
-    window.__savedAnswers = window.__savedAnswers || {};
-
-    function renderStep(step){
-      currentStep = step;
-      setStepper(step);
-      buildForm(stepMap[step]);
+    // Return to Home (Logo Click)
+    const navLogo = document.getElementById('navLogo');
+    if(navLogo) {
+        navLogo.addEventListener('click', () => {
+            const landing = document.getElementById('landingEcosystem');
+            const main = document.getElementById('mainApp');
+            if(landing) landing.classList.remove('hidden');
+            if(main) main.classList.add('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
     }
 
-    renderStep(1);
-
-    // 5. Bind form controls
-    document.getElementById("backBtn").addEventListener("click", () => {
-      if (currentStep > 1) renderStep(currentStep - 1);
+    // Navbar Links Logic (Ensure landing is visible if clicking About/Works/Whom)
+    document.querySelectorAll('nav a[href^="#"]').forEach(link => {
+        link.addEventListener('click', (e) => {
+            const landing = document.getElementById('landingEcosystem');
+            const main = document.getElementById('mainApp');
+            if(landing && landing.classList.contains('hidden')) {
+                landing.classList.remove('hidden');
+                if(main) main.classList.add('hidden');
+            }
+        });
     });
-
-    document.getElementById("nextBtn").addEventListener("click", () => {
-      if (currentStep < 3) renderStep(currentStep + 1);
-    });
-
-    document.getElementById("predictBtn").addEventListener("click", () => predict(FIELDS));
-    document.getElementById("pdfBtn").addEventListener("click", downloadPDF);
     
-  } catch (e) {
-    console.error(e);
-    renderError("Initialization failed: " + e.message);
-  }
-});
+    const predictBtn = document.getElementById('predictBtn');
+    if(predictBtn) predictBtn.addEventListener('click', predict);
+
+    const pdfBtn = document.getElementById('pdfBtn');
+    if(pdfBtn) pdfBtn.addEventListener('click', downloadPDF);
+
+    // macOS Native Window Controls
+    const creditsWindow = document.getElementById('creditsWindow');
+    const closeBtn = document.getElementById('closeBtn');
+    const minimizeBtn = document.getElementById('minimizeBtn');
+    const maximizeBtn = document.getElementById('maximizeBtn');
+    const architectsCard = document.getElementById('architectsCard');
+    const restoreWindow = document.getElementById('restoreWindow');
+
+    if (closeBtn && creditsWindow && architectsCard) {
+        closeBtn.addEventListener('click', () => {
+            console.log('macOS Control: Vanishing Window');
+            creditsWindow.style.opacity = "0";
+            creditsWindow.style.filter = "blur(10px)";
+            creditsWindow.style.transform = "scale(0.95)";
+            
+            setTimeout(() => {
+                creditsWindow.style.display = 'none';
+                architectsCard.style.display = 'block';
+                architectsCard.style.opacity = "1";
+                console.log('macOS Control: Card Revealed');
+            }, 400);
+        });
+
+        restoreWindow.addEventListener('click', () => {
+            console.log('macOS Control: Restoring Window');
+            architectsCard.style.display = 'none';
+            architectsCard.style.opacity = "0";
+            
+            creditsWindow.style.display = 'block';
+            creditsWindow.classList.remove('minimized', 'maximized');
+            
+            setTimeout(() => {
+                creditsWindow.style.opacity = "1";
+                creditsWindow.style.filter = "blur(0px)";
+                creditsWindow.style.transform = "scale(1)";
+                console.log('macOS Control: Window Restored');
+            }, 50);
+        });
+    }
+
+    if (minimizeBtn && creditsWindow) {
+        minimizeBtn.addEventListener('click', () => {
+            creditsWindow.classList.toggle('minimized');
+            creditsWindow.classList.remove('maximized');
+        });
+    }
+
+    if (maximizeBtn && creditsWindow) {
+        maximizeBtn.addEventListener('click', () => {
+            creditsWindow.classList.toggle('maximized');
+            creditsWindow.classList.remove('minimized');
+        });
+    }
+
+    // Initializations - removed initOrb from here
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    init();
+}
