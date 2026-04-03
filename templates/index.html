@@ -149,26 +149,26 @@
                 pointer-events: none;
             }
             #architectsCard {
-                @apply glass-card p-12 text-center space-y-6 border-super-purple/20 shadow-[0_0_50px_rgba(124,58,237,0.1)];
+                @apply glass-card p-6 sm:p-12 text-center space-y-6 border-super-purple/20 shadow-[0_0_50px_rgba(124,58,237,0.1)];
             }
         }
     </style>
 </head>
 <body class="relative min-h-screen">
 
-    <div class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-super-purple/30 rounded-full blur-[120px] pointer-events-none z-[-1] animate-blob"></div>
+    <div class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] sm:w-[600px] sm:h-[600px] bg-super-purple/30 rounded-full blur-[120px] pointer-events-none z-[-1] animate-blob"></div>
 
-    <nav class="absolute top-6 left-1/2 -translate-x-1/2 z-[60] flex items-center justify-between glass-nav px-2 py-2 rounded-full w-max min-w-[400px] transition-all">
+    <nav class="absolute top-6 left-1/2 -translate-x-1/2 z-[60] flex items-center justify-between glass-nav px-2 py-2 rounded-full w-max min-w-[300px] sm:min-w-[400px] transition-all">
         <div class="flex items-center gap-1 px-4 cursor-pointer hover:scale-105 transition-transform" id="navLogo">
             <svg class="w-5 h-5 text-super-purple" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L2 22h20L12 2z"/></svg>
             <span class="text-xs font-bold tracking-tighter uppercase pl-1">BurnoutGuard</span>
         </div>
-        <div class="flex items-center gap-6 px-4 text-sm text-super-text/60 font-medium">
+        <div class="flex items-center gap-4 sm:gap-6 px-4 text-sm text-super-text/60 font-medium">
             <a href="#about" class="hover:text-super-purple transition-colors">About</a>
             <a href="#works" class="hover:text-super-purple transition-colors">Works</a>
             <a href="#whom" class="hover:text-super-purple transition-colors">Whom</a>
         </div>
-        <div class="flex items-center gap-2 pr-2">
+        <div class="flex items-center gap-1 sm:gap-2 pr-2">
             <button class="bg-super-purple text-white text-[10px] px-4 py-2 rounded-full font-bold uppercase tracking-wider hover:scale-105 transition-all start-btn">
                 Workspace
             </button>
@@ -178,7 +178,7 @@
     <div id="landingEcosystem" class="relative pt-48 pb-32 flex flex-col items-center">
         <section id="about" class="max-w-5xl mx-auto px-6 text-center mb-32 reveal-3d">
             <div class="animate-in fade-in slide-in-from-bottom-8 duration-1000 space-y-6">
-                <h1 class="text-[5rem] leading-[1.1] font-medium tracking-tight">
+                <h1 class="text-4xl sm:text-5xl md:text-[5rem] leading-[1.1] font-medium tracking-tight">
                     Analyze Your <br/>
                     Mind <span class="font-serif italic text-super-text/90">Protect</span> <br/>
                     Your <span class="font-serif italic text-super-text/90">Wellness</span>
@@ -197,7 +197,7 @@
         </section>
 
         <section id="works" class="max-w-6xl mx-auto px-6 mt-20 grid grid-cols-1 md:grid-cols-3 gap-6 w-full text-super-text">
-            <div class="md:col-span-1 h-80 glass-card p-8 flex flex-col justify-between relative overflow-hidden group reveal-3d stagger-1">
+            <div class="md:col-span-1 h-64 sm:h-80 glass-card p-8 flex flex-col justify-between relative overflow-hidden group reveal-3d stagger-1">
                 <div class="absolute inset-0 bg-gradient-to-br from-super-purple/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 <div>
                     <div class="w-12 h-12 rounded-full border border-super-border flex items-center justify-center mb-6">
@@ -208,7 +208,7 @@
                 <p class="text-sm text-super-text/50">Reflect on where you are and where you want to be.</p>
             </div>
             
-            <div class="md:col-span-1 h-80 glass-card p-8 flex flex-col justify-between relative overflow-hidden group reveal-3d stagger-2">
+            <div class="md:col-span-1 h-64 sm:h-80 glass-card p-8 flex flex-col justify-between relative overflow-hidden group reveal-3d stagger-2">
                 <div class="absolute inset-0 bg-gradient-to-br from-super-purple/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 <div class="relative z-10">
                     <div class="w-12 h-12 rounded-full bg-super-purple flex items-center justify-center mb-6 shadow-[0_0_20px_rgba(124,58,237,0.4)]">
@@ -219,7 +219,7 @@
                 <p class="text-sm text-super-text/50 relative z-10">Receive tailored patterns, prompts, and deep insights.</p>
             </div>
 
-            <div class="md:col-span-1 h-80 glass-card p-8 flex flex-col justify-between relative overflow-hidden group reveal-3d stagger-3">
+            <div class="md:col-span-1 h-64 sm:h-80 glass-card p-8 flex flex-col justify-between relative overflow-hidden group reveal-3d stagger-3">
                 <div class="absolute inset-0 bg-gradient-to-br from-super-purple/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 <div class="absolute right-0 bottom-0 w-48 h-48 bg-white/5 rounded-tl-full blur-2xl"></div>
                 <div class="relative z-10">
@@ -255,7 +255,7 @@
         </section>
 
         <!-- macOS Themed Credits Section -->
-        <section id="credits" class="max-w-3xl mx-auto px-6 mt-20 pb-32 reveal-3d credits-container min-h-[500px]">
+        <section id="credits" class="max-w-3xl mx-auto px-6 mt-20 pb-32 reveal-3d credits-container min-h-[400px] sm:min-h-[500px]">
             <div id="creditsWindow" class="window-inner">
                 <!-- Front Face -->
                 <div class="window-front w-full bg-white/80 dark:bg-black/40 backdrop-blur-xl border border-super-border shadow-2xl overflow-hidden">
@@ -271,7 +271,7 @@
                     </div>
                     
                     <!-- Content Area -->
-                    <div class="p-10 space-y-8">
+                    <div class="p-6 sm:p-10 space-y-8">
                         <header class="space-y-2">
                             <h3 class="text-2xl font-medium text-super-text">The <span class="font-serif italic text-super-purple">Architects</span></h3>
                             <p class="text-sm text-super-text/60 leading-relaxed max-w-xl">
@@ -279,7 +279,7 @@
                             </p>
                         </header>
                         
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
                             <div class="p-4 rounded-xl bg-super-purple/5 border border-super-purple/10 group hover:border-super-purple/30 transition-all">
                                 <p class="text-xs text-super-text/40 mb-1 group-hover:text-super-purple transition-colors">Developer</p>
                                 <p class="text-sm font-medium text-super-text">Arpan Nagar</p>
@@ -324,18 +324,18 @@
 
     <main id="mainApp" class="hidden relative pt-32 pb-40">
         <div class="max-w-6xl mx-auto px-6">
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-12">
                 
-                <div class="lg:col-span-7 space-y-12">
+                <div class="md:col-span-7 space-y-12">
                     <header class="animate-in fade-in slide-in-from-left-4 duration-1000">
                         <h2 class="text-4xl font-medium tracking-tight mb-2">Configure <span class="font-serif italic text-super-purple">Profile</span></h2>
                         <p class="text-super-text/50">Input physiological and academic markers</p>
                     </header>
 
-                    <div class="glass-card p-10 space-y-12">
+                    <div class="glass-card p-6 sm:p-10 space-y-12">
                         <section class="space-y-6">
                             <h3 class="text-sm font-medium text-super-text/70 border-b border-super-border pb-4">Identity Parameters</h3>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                                 <div class="space-y-2">
                                     <label class="text-xs text-super-text/50 pl-1">Student Name</label>
                                     <input id="studentName" type="text" class="w-full bg-black/5 dark:bg-[#161320] border border-super-border rounded-xl px-5 py-3 outline-none focus:border-super-purple transition-all text-sm font-medium" />
@@ -369,9 +369,9 @@
                     </div>
                 </div>
 
-                <aside class="lg:col-span-5 relative">
+                <aside class="md:col-span-5 relative">
                     <div class="sticky top-32">
-                        <section class="glass-card p-10 min-h-[600px] flex flex-col relative overflow-hidden group">
+                        <section class="glass-card p-6 sm:p-10 min-h-[600px] flex flex-col relative overflow-hidden group">
                             <div id="orbContainer" class="absolute inset-0 z-0 opacity-40 dark:opacity-60 pointer-events-none"></div>
                             
                             <div class="flex items-center justify-between mb-8 relative z-10">
