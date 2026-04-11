@@ -167,16 +167,18 @@ def report_pdf():
     story = []
 
     story.append(Paragraph("<b>BurnoutGuard</b> - Insights Report", title_style))
-    story.append(Paragraph(f"<b>Model Architecture:</b> {result['model_info'].get('best_model','-')} | <b>ROC-AUC:</b> {result['model_info'].get('roc_auc','-')}", normal_style))
-    story.append(Spacer(1, 15))
+    story.append(Paragraph("<font size=10 color='#64748b'>Personalized burnout screening and action plan for student wellness.</font>", normal_style))
+    story.append(Spacer(1, 10))
+    story.append(Table([['']], colWidths=[470], style=[('LINEBELOW', (0,0), (-1,-1), 2, colors.HexColor('#c7d2fe'))]))
+    story.append(Spacer(1, 18))
 
     prof = result.get("profile", {}) or {}
     story.append(Paragraph("Student Profile", h2_style))
     prof_data = [
         ["Name:", prof.get('studentName','-'), "College:", prof.get('college','-')],
-        ["Course:", prof.get('course','-'), "Semester:", str(prof.get('semester','-'))]
+        ["Course:", prof.get('course','-'), "Enrollment:", prof.get('enrollment','-')]
     ]
-    ptable = Table(prof_data, colWidths=[60, 180, 60, 150])
+    ptable = Table(prof_data, colWidths=[60, 180, 60, 150], hAlign='LEFT')
     ptable.setStyle(TableStyle([
         ('FONTNAME', (0,0), (-1,-1), 'Helvetica'),
         ('FONTNAME', (0,0), (0,-1), 'Helvetica-Bold'),
@@ -184,9 +186,12 @@ def report_pdf():
         ('TEXTCOLOR', (0,0), (-1,-1), colors.HexColor("#334155")),
         ('ALIGN', (0,0), (-1,-1), 'LEFT'),
         ('BOTTOMPADDING', (0,0), (-1,-1), 8),
+        ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#f8fafc')),
+        ('BACKGROUND', (0,1), (-1,1), colors.whitesmoke),
+        ('BOX', (0,0), (-1,-1), 0.5, colors.HexColor('#e2e8f0')),
     ]))
     story.append(ptable)
-    story.append(Spacer(1, 10))
+    story.append(Spacer(1, 16))
 
     story.append(Paragraph("Assessment Summary", h2_style))
     
@@ -203,11 +208,15 @@ def report_pdf():
         ["Burnout Probability:", f"{int(round(result['probability']*100))}%"],
         ["Assessment Score:", f"{result['assessment']['score']}/100 ({result['assessment']['band']})"]
     ]
-    stable = Table(summary_data, colWidths=[130, 320])
+    stable = Table(summary_data, colWidths=[130, 320], hAlign='LEFT')
     stable.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#eef2ff')),
+        ('BOX', (0,0), (-1,-1), 0.75, colors.HexColor('#c7d2fe')),
+        ('INNERGRID', (0,0), (-1,-1), 0.5, colors.HexColor('#e2e8f0')),
         ('FONTNAME', (0,0), (0,-1), 'Helvetica-Bold'),
         ('TEXTCOLOR', (0,0), (-1,-1), colors.HexColor("#334155")),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 8),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 10),
+        ('TOPPADDING', (0,0), (-1,-1), 10),
     ]))
     story.append(stable)
     
@@ -254,12 +263,13 @@ def report_pdf():
         val_str = "-" if val_str == "" else val_str
         answers_data.append([Paragraph(q, normal_style), Paragraph(val_str, normal_style)])
         
-    atable = Table(answers_data, colWidths=[330, 120])
+    atable = Table(answers_data, colWidths=[330, 120], hAlign='LEFT')
     atable.setStyle(TableStyle([
         ('VALIGN', (0,0), (-1,-1), 'TOP'),
         ('LINEBELOW', (0,0), (-1,-1), 0.5, colors.HexColor("#e2e8f0")),
         ('TOPPADDING', (0,0), (-1,-1), 8),
         ('BOTTOMPADDING', (0,0), (-1,-1), 8),
+        ('ROWBACKGROUNDS', (0,0), (-1,-1), [colors.whitesmoke, colors.white]),
     ]))
     story.append(atable)
     

@@ -1,0 +1,17 @@
+# Python cache and environment files
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+venv/
+ENV/
+.env
+.env.*
+*.sqlite3
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# OS files
+.DS_Store
+Thumbs.db
